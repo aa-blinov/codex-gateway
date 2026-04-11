@@ -107,7 +107,15 @@ Pass `response_format.type = "json_schema"` (chat completions) or `text.format.t
 ## Not supported
 
 - Streaming (`stream: true`)
-- Tools / function calling
+- `tools` / `tool_choice` in the request body — see below
 - Sampling parameters (`temperature`, `top_p`, etc.)
 - Multi-turn server-side state (`previous_response_id`)
 - `n > 1`
+
+## Why tools are not supported
+
+The OpenAI tools API works as a two-phase loop: the model emits a `tool_calls` response, the **client** executes the tool, then sends the result back. This requires the gateway to act as a middleman across multiple round-trips.
+
+`codex exec` is itself a full agent — it executes bash commands and reads files internally, without exposing intermediate tool calls to the caller. There is no way to intercept that loop and re-expose it as OpenAI-style `tool_calls`.
+
+If you need client-controlled tool use, call the OpenAI API directly or use a proxy like [LiteLLM](https://github.com/BerriAI/litellm). The value of this gateway is using your existing Codex auth and its built-in agentic execution via a simple HTTP interface.
